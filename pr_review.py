@@ -350,8 +350,7 @@ def main():
                   f"({'model error: ' + str(err)[:120] if err else 'the model returned no final answer'})._")
     note = ("\n\n<sub>Diff truncated for review.</sub>" if truncated else "")
     head = f"### Automated review ({model})" + (f" - `{full_sha[:7]}`" if full_sha else "")
-    text = (f"{MARKER}\n{head}\n\n{review}{note}\n\n"
-            f"<sub>Advisory only - a free model's second opinion, not a merge gate.</sub>")
+    text = f"{MARKER}\n{head}\n\n{review}{note}"
     payload = {"body": text, "event": "COMMENT", **({"commit_id": full_sha} if full_sha else {})}
     try:
         _gh("POST", f"/repos/{repo}/pulls/{pr}/reviews", token, payload)
