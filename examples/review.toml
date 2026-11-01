@@ -1,0 +1,9 @@
+# Optional. Copy to .github/review.toml in the reviewed repo. Read from the PR's
+# BASE branch, so a PR can't change how it is reviewed. Every key is optional.
+
+# enabled = false                       # turn the bot off for this repo
+# model = "nvidia/nemotron-3.5-super-vl:free"   # must be a free model
+# diff_limit = 24000                    # chars of diff sent to the model (1000..200000)
+# extra_prompt = """
+# This repo is a shell-heavy CLI. Pay attention to quoting and set -e pitfalls.
+# """

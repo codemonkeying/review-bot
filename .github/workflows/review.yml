@@ -1,0 +1,59 @@
+name: review
+
+# Reusable workflow: an advisory code review of a pull request by a FREE hosted model,
+# posted as a PR review (event COMMENT). Call it from a repo's own workflow - see
+# examples/caller.yml. Free-model-only by construction (pr_review.py refuses anything
+# not :free/-free), so it can never spend against an account. Never a merge gate.
+#
+# Per-repo settings: .github/review.toml on the PR's base branch (see README).
+
+on:
+  workflow_call:
+    inputs:
+      model:
+        description: "Free model id; overrides .github/review.toml and the default"
+        type: string
+        required: false
+        default: ""
+      bot_ref:
+        description: "Ref of this repo to run pr_review.py from"
+        type: string
+        required: false
+        default: "main"
+    secrets:
+      KILO_API_KEY:
+        description: "Optional; free models need none"
+        required: false
+
+jobs:
+  review:
+    # Same-repo PRs only: fork PRs get a read-only token and must not trigger
+    # outbound model calls on the owner's behalf.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout review-bot
+        uses: actions/checkout@v4
+        with:
+          repository: codemonkeying/review-bot
+          ref: ${{ inputs.bot_ref }}
+          path: .review-bot
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Free-model review
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REVIEW_MODEL: ${{ inputs.model }}
+          KILO_API_KEY: ${{ secrets.KILO_API_KEY }}
+        run: python3 .review-bot/pr_review.py
